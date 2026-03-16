@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern Customer Hotel Booking</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f5f5f5}
+header{background:#c40000;color:white;padding:16px;text-align:center;font-size:24px;font-weight:bold}
+
+nav {display: flex; justify-content: center; gap: 12px; background: transparent; margin: 16px 0;}
+nav button {background: #c40000; border: none; color: white; padding: 10px 18px; cursor: pointer; font-size: 14px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: background 0.3s, transform 0.2s;}
+nav button:hover {background: #a30000; transform: translateY(-2px);}
+
+.container{padding:20px}
+.section{display:none}
+.active{display:block}
+
+.card{background:white;padding:25px;border-radius:10px;max-width:420px;margin:auto;box-shadow:0 6px 18px rgba(0,0,0,0.15)}
+
+input,select{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc;font-size:14px}
+input:focus,select:focus{outline:none;border:1px solid #c40000}
+
+button.primary{background:#c40000;color:white;border:none;padding:10px;border-radius:6px;cursor:pointer}
+button.primary:hover{background:#a30000}
+
+.room-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
+
+.room-card{background:white;padding:15px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.room-card h3{margin-top:0}
+
+.table{width:100%;border-collapse:collapse;background:white}
+.table th,.table td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+
+.error{color:red;font-size:13px}
+.password-box{position:relative}
+.toggle-pass{position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:18px; color:#555; display:flex; align-items:center; justify-content:center;}
+.badge{background:#c40000;color:white;padding:4px 8px;border-radius:6px;font-size:12px}
+
+.search-box{max-width:300px;margin-bottom:10px}
+
+</style>
+</head>
+<body>
+
+<header>Hotel Booking System</header>
+
+<!-- AUTH -->
+<div id="auth" class="container">
+<div class="card">
+<h2 id="formTitle">Login</h2>
+
+<input id="username" placeholder="Username">
+<div id="userError" class="error"></div>
+
+<div class="password-box">
+<input type="password" id="password" placeholder="Password">
+<span class="toggle-pass" onclick="togglePassword()"><i id="eyeIcon" class="fa-solid fa-eye"></i></span>
+</div>
+<div id="passError" class="error"></div>
+
+<button class="primary" onclick="handleAuth()" id="authBtn">Login</button>
+
+<p id="toggleText">Don't have an account? <a href="#" onclick="toggleForm()">Register</a></p>
+
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+<nav>
+  <button onclick="showSection('home')">Home</button>
+  <button onclick="showSection('rooms')">Rooms</button>
+  <button onclick="showSection('myBookings')">My Bookings</button>
+  <button onclick="logout()">Logout</button>
+</nav>
+
+<div class="container">
+
+<!-- HOME -->
+<div id="home" class="section active">
+<h2>Welcome to Our Hotel!</h2>
+<p>Select a room and book your stay easily.</p>
+</div>
+
+<!-- ROOMS -->
+<div id="rooms" class="section">
+<h2>Available Rooms</h2>
+<div class="room-grid">
+  <div class="room-card">
+    <h3>Single Room</h3>
+    <p>Good for 1 person</p>
+    <p><strong>$50 / night</strong></p>
+    <button class="primary" onclick="selectRoom('Single Room',50)">Book</button>
+  </div>
+  <div class="room-card">
+    <h3>Double Room</h3>
+    <p>Good for 2 persons</p>
+    <p><strong>$90 / night</strong></p>
+    <button class="primary" onclick="selectRoom('Double Room',90)">Book</button>
+  </div>
+  <div class="room-card">
+    <h3>Suite</h3>
+    <p>Luxury experience</p>
+    <p><strong>$150 / night</strong></p>
+    <button class="primary" onclick="selectRoom('Suite',150)">Book</button>
+  </div>
+</div>
+</div>
+
+<!-- BOOKING FORM -->
+<div id="booking" class="section">
+  <h2>Complete Your Booking</h2>
+
+  <p>Room: <span class="badge" id="roomSelected"></span></p>
+  <p>Price per night: $<span id="roomPrice"></span></p>
+
+  <label for="guest">Your Name:</label>
+  <input id="guest" name="guest_name" placeholder="Your Name" required>
+  <div id="guestError" class="error"></div>
+
+  <label for="checkin">Check-in</label>
+  <input type="date" id="checkin" name="checkin" required>
+
+  <label for="checkout">Check-out</label>
+  <input type="date" id="checkout" name="checkout" required>
+  <div id="dateError" class="error"></div>
+
+  <p>Total Nights: <strong id="nights">0</strong></p>
+  <p>Total Cost: <strong>$<span id="total">0</span></strong></p>
+
+  <label for="payment">Payment Method:</label>
+  <select id="payment" name="payment" required>
+    <option value="">Payment Method</option>
+    <option value="Cash">Cash</option>
+    <option value="Credit Card">Credit Card</option>
+    <option value="GCash">GCash</option>
+  </select>
+  <div id="paymentError" class="error"></div>
+
+  <button class="primary" type="button" onclick="confirmBooking()">Confirm Booking</button>
+</div>
+
+<!-- MY BOOKINGS -->
+<div id="myBookings" class="section">
+  <h2>My Bookings</h2>
+  <div id="bookingSummary" style="margin-bottom:15px; background:#fff; padding:15px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1)">
+    <p>Total Bookings: <strong id="totalBookings">0</strong></p>
+    <p>Total Cost: $<strong id="totalCost">0</strong></p>
+    <p>Next Booking: <strong id="nextBooking">None</strong></p>
+  </div> 
+  <div id="myBookingsList"></div>
+</div>  
+
+<input class="search-box" id="search" placeholder="Search room or name" onkeyup="searchBookings()">
+
+<table class="table" id="bookingTable">
+<tr>
+<th>Name</th><th>Room</th><th>Dates</th><th>Total</th><th>Payment</th><th>Action</th>
+</tr>
+</table>
+</div>
+
+</div>
+</div>
+
+<script>
+let isLogin = true;
+let room = "", price = 0, userId = "";
+
+// --- HELPER FUNCTIONS ---
+function formatDateForDB(dateStr) {
+    let d = new Date(dateStr);
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    let year = d.getFullYear();
+    return `${year}-${month}-${day}`; // MySQL format
+}
+
+function formatDateForDisplay(dateStr) {
+    let d = new Date(dateStr);
+    let month = String(d.getMonth() + 1).padStart(2, '0');
+    let day = String(d.getDate()).padStart(2, '0');
+    let year = d.getFullYear();
+    return `${year}/${month}/${day}`; // User display
+}
+
+function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+        passwordInput.type = "password";
+        eyeIcon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+}
+
+function toggleForm() {
+    isLogin = !isLogin;
+    let title = document.getElementById("formTitle");
+    let btn = document.getElementById("authBtn");
+    let text = document.getElementById("toggleText");
+    if (isLogin) {
+        title.innerText = "Login";
+        btn.innerText = "Login";
+        text.innerHTML = "Don't have an account? <a href='#' onclick='toggleForm()'>Register</a>";
+    } else {
+        title.innerText = "Register";
+        btn.innerText = "Register";
+        text.innerHTML = "Already have an account? <a href='#' onclick='toggleForm()'>Login</a>";
+    }
+}
+
+async function handleAuth() {
+    const usernameEl = document.getElementById("username");
+    const passwordEl = document.getElementById("password");
+    const userError = document.getElementById("userError");
+    const passError = document.getElementById("passError");
+
+    let u = usernameEl.value.trim();
+    let p = passwordEl.value.trim();
+    userError.innerText = ""; 
+    passError.innerText = "";
+
+    if (u.length < 3) { userError.innerText = "Username must be 3+ characters"; return; }
+    if (p.length < 8) { passError.innerText = "Password must be 8+ characters"; return; }
+
+    let url = isLogin ? "login.php" : "register.php";
+    let form = new FormData();
+    form.append("username", u);
+    form.append("password", p);
+
+    let res = await fetch(url, { method: "POST", body: form });
+    let text = await res.text();
+
+    if (isLogin) {
+        if (text != "invalid") { 
+            userId = text; // ✅ store user id
+            startApp(); 
+        } else alert("Invalid login");
+    } else {
+        if (text === "success") { 
+            alert("Registered successfully"); 
+            toggleForm(); 
+        } else if(text === "exists") {
+            alert("Username already exists");
+        } else {
+            alert("Registration failed");
+        }
+    }
+}
+
+function startApp() {
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadBookings();
+}
+
+function logout() {
+    document.getElementById("auth").style.display = "block";
+    document.getElementById("app").style.display = "none";
+}
+
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+function selectRoom(r, p) {
+    room = r; 
+    price = p; 
+    document.getElementById("roomSelected").innerText = r; 
+    document.getElementById("roomPrice").innerText = p; 
+    showSection("booking");
+}
+
+// --- CALCULATE NIGHTS & TOTAL ---
+document.getElementById("checkin").onchange = document.getElementById("checkout").onchange = function () {
+    const checkinEl = document.getElementById("checkin");
+    const checkoutEl = document.getElementById("checkout");
+    const nightsEl = document.getElementById("nights");
+    const totalEl = document.getElementById("total");
+
+    if (checkinEl.value && checkoutEl.value) {
+        let nights = (new Date(checkoutEl.value) - new Date(checkinEl.value)) / (1000 * 60 * 60 * 24);
+        if (nights > 0) {
+            nightsEl.innerText = nights;
+            totalEl.innerText = nights * price;
+        } else {
+            nightsEl.innerText = 0;
+            totalEl.innerText = 0;
+        }
+    }
+}
+
+async function confirmBooking() {
+    const guestEl = document.getElementById("guest");
+    const paymentEl = document.getElementById("payment");
+    const totalEl = document.getElementById("total");
+    const checkinEl = document.getElementById("checkin");
+    const checkoutEl = document.getElementById("checkout");
+
+    let name = guestEl.value.trim();
+    let pay = paymentEl.value;
+    let total = totalEl.innerText;
+
+    if (name.length < 3) { alert("Enter valid name"); return; }
+    if (pay === "") { alert("Choose payment"); return; }
+
+    let form = new FormData();
+    form.append("guest_name", name);
+    form.append("room", document.getElementById("roomSelected").innerText);
+    form.append("checkin", checkinEl.value);
+    form.append("checkout", checkoutEl.value);
+    form.append("total", total);
+    form.append("payment", pay);
+
+    try {
+        let res = await fetch("book.php", { method: "POST", body: form });
+        let text = await res.text();
+
+        if (text === "success") {
+            alert("Booking Confirmed!");
+            loadBookings(); // refresh list
+            showSection("myBookings");
+        } else {
+            alert("Booking failed: " + text);
+        }
+    } catch (err) {
+        alert("Booking failed: " + err.message);
+    }
+}
+
+async function loadBookings() {
+    let res = await fetch("fetch_bookings.php");
+    let bookings = await res.json();
+
+    let container = document.getElementById("myBookingsList");
+    container.innerHTML = "";
+
+    // --- Summary calculations ---
+    let totalBookings = bookings.length;
+    let totalCost = bookings.reduce((sum, b) => sum + parseFloat(b.total), 0);
+
+    // Find next booking (earliest check-in date in the future)
+    let today = new Date();
+    let upcoming = bookings
+        .map(b => ({...b, checkinDate: new Date(b.checkin)}))
+        .filter(b => b.checkinDate >= today)
+        .sort((a, b) => a.checkinDate - b.checkinDate)[0];
+
+    document.getElementById("totalBookings").innerText = totalBookings;
+    document.getElementById("totalCost").innerText = totalCost;
+    document.getElementById("nextBooking").innerText = upcoming ? 
+        `${upcoming.room} on ${upcoming.checkin}` : "None";
+
+    // --- Render booking list ---
+    bookings.forEach(b => {
+        let item = document.createElement("div");
+        item.className = "booking-item";
+        item.innerHTML = `
+            <p><strong>${b.name}</strong> booked ${b.room}</p>
+            <p>Check-in: ${b.checkin}, Check-out: ${b.checkout}</p>
+            <p>Total: $${b.total}, Payment: ${b.payment}</p>
+        `;
+        container.appendChild(item);
+    });
+}
+
+
+// --- SEARCH BOOKINGS ---
+function searchBookings() {
+    let term = document.getElementById("search").value.toLowerCase();
+    Array.from(document.getElementById("bookingTable").rows).slice(1).forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(term) ? "" : "none";
+    });
+}
+
+// In confirmBooking()
+form.append("checkin", formatDateForDB(checkin.value));
+form.append("checkout", formatDateForDB(checkout.value));
+</script>
+
+</body>
+</html>
